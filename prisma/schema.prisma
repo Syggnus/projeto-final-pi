@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Company {
+  id           Int       @id @default(autoincrement())
+  name         String
+  branch       String
+  country      String
+  alertMessage String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  reports      Report[]
+
+  @@map("companies")
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_INVESTIGATION
+  RESOLVED
+  REJECTED
+  ARCHIVED
+}
+
+enum ReportCategory {
+  DATA_LEAK
+  UNAUTHORIZED_ACCESS
+  PHISHING
+  MALWARE
+  SOCIAL_ENGINEERING
+  PHYSICAL_SECURITY
+  POLICY_VIOLATION
+  OTHER
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Report {
+  id                  Int                     @id @default(autoincrement())
+  title               String
+  description         String
+  category            ReportCategory
+  severity            SeverityLevel           @default(MEDIUM)
+  status              ReportStatus            @default(PENDING)
+  isAnonymous         Boolean                 @default(false)
+  reporterName        String?
+  reporterEmail       String?
+  reporterPhone       String?
+
+  companyId           Int
+  company             Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  incidentDate        DateTime?
+  evidenceDescription String?
+  internalNotes       String?
+  assignedTo          String?
+  resolvedAt          DateTime?
+  resolution          String?
+
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  affectedSystems     ReportAffectedSystem[]
+  attachments         ReportAttachment[]
+
+  @@map("reports")
+  @@index([companyId])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model ReportAffectedSystem {
+  id        Int     @id @default(autoincrement())
+  name      String
+
+  reportId  Int
+  report    Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_affected_systems")
+}
+
+model ReportAttachment {
+  id        Int     @id @default(autoincrement())
+  filePath  String
+
+  reportId  Int
+  report    Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_attachments")
+}
