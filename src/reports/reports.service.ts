@@ -5,9 +5,20 @@ import { UpdateReportDto } from './dto/update-report.dto';
 
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(data: CreateReportDto) {
+
+    const company = await this.prisma.company.findUnique({
+      where: { id: data.companyId },
+    });
+
+    if (!company) {
+      throw new NotFoundException(
+        `A empresa com ID ${data.companyId} não foi encontrada.`,
+      );
+    }
+
     return this.prisma.report.create({
       data: {
         title: data.title,
